@@ -12,13 +12,13 @@ import MultipeerConnectivity
 
 class ViewController: UIViewController {
     
-    var files = [URL]()
+    var files = [Data]()
     
     // How someone's name is shown in other devices
     var peerID = MCPeerID(displayName: UIDevice.current.name)
     var mcSession: MCSession?
     var mcAdvertiserAssistant: MCAdvertiserAssistant?
-
+    
     override func viewDidLoad() {
         title = "File Sharing P2P"
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(showConnectionPrompt))
@@ -56,7 +56,26 @@ class ViewController: UIViewController {
         present(documentPicker, animated: true, completion: nil)
         
     }
-
+    
+    
+    @IBAction func shareDocument(_ sender: Any) {
+        
+//        guard let mcSession = mcSession else { return }
+//        // Sending data to connected peers
+//        if mcSession.connectedPeers.count > 0 {
+////            let fileData = sandboxFileURL.dataRepresentation
+//            guard let documentData = self.files.first else { return }
+//            do {
+//                try mcSession.send(documentData, toPeers: mcSession.connectedPeers, with: .reliable)
+////                try mcSession.send(fileData, toPeers: mcSession.connectedPeers, with: .reliable)
+//            } catch {
+//                let ac = UIAlertController(title: "Send error", message: error.localizedDescription, preferredStyle: .alert)
+//                ac.addAction(UIAlertAction(title: "OK", style: .default))
+//                present(ac, animated: true)
+//            }
+//        }
+    }
+    
 }
 
 extension ViewController: MCBrowserViewControllerDelegate, MCSessionDelegate {
@@ -78,7 +97,32 @@ extension ViewController: MCBrowserViewControllerDelegate, MCSessionDelegate {
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         // Not sure what should be implemented here...
-        print("Did receive data")
+        self.files.insert(data, at: 0)
+        
+        let directoryPath =  NSHomeDirectory().appending("/Documents/")
+        if !FileManager.default.fileExists(atPath: directoryPath) {
+            do {
+                try FileManager.default.createDirectory(at: NSURL.fileURL(withPath: directoryPath), withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                print(error)
+            }
+        }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMddhhmmss"
+
+        let filename = dateFormatter.string(from: Date()).appending(".txt")
+        let filepath = directoryPath.appending(filename)
+        let url = NSURL.fileURL(withPath: filepath)
+        do {
+            try files.first?.write(to: url, options: .atomic)
+
+        } catch {
+            print(error)
+            print("File cant not be save at path \(filepath), with error : \(error)")
+        }
+        
+//        print("Did receive data")
     }
     
     func browserViewControllerDidFinish(_ browserViewController: MCBrowserViewController) {
@@ -108,16 +152,24 @@ extension ViewController: UIDocumentPickerDelegate {
             return
         }
         
+        do {
+            let documentText = try String(contentsOf: selectedFileURL, encoding: .utf8)
+            let data = documentText.data(using: .utf8)
+        } catch {
+            print("Error turning getting content.")
+        }
+        
         let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let sandboxFileURL = dir.appendingPathComponent(selectedFileURL.lastPathComponent)
+        
+        let documentData = selectedFileURL.dataRepresentation
+        files.insert(documentData, at: 0)
         
         if FileManager.default.fileExists(atPath: sandboxFileURL.path) {
             print("File already exists. No need to do anything.")
         } else {
             do {
                 try FileManager.default.copyItem(at: selectedFileURL, to: sandboxFileURL)
-                
-                files.append(sandboxFileURL)
                 
                 print("Copied file")
             } catch {
@@ -126,18 +178,25 @@ extension ViewController: UIDocumentPickerDelegate {
         }
         
         guard let mcSession = mcSession else { return }
-        // Sending data to connected peers
+                // Sending data to connected peers
         if mcSession.connectedPeers.count > 0 {
-            let fileData = sandboxFileURL.dataRepresentation
             do {
-                try mcSession.send(fileData, toPeers: mcSession.connectedPeers, with: .reliable)
+                let documentText = try String(contentsOf: selectedFileURL, encoding: .utf8)
+                if let data = documentText.data(using: .utf8) {
+                    do {
+                        try mcSession.send(data, toPeers: mcSession.connectedPeers, with: .reliable)
+                    } catch {
+                        let ac = UIAlertController(title: "Send error", message: error.localizedDescription, preferredStyle: .alert)
+                        ac.addAction(UIAlertAction(title: "OK", style: .default))
+                        present(ac, animated: true)
+                    }
+                }
+                
             } catch {
-                let ac = UIAlertController(title: "Send error", message: error.localizedDescription, preferredStyle: .alert)
-                ac.addAction(UIAlertAction(title: "OK", style: .default))
-                present(ac, animated: true)
+                print("Error turning getting content.")
             }
+            
         }
-        
         
     }
 }

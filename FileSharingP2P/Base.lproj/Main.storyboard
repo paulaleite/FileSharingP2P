@@ -22,11 +22,20 @@
                                     <action selector="insertDocument:" destination="bgw-3e-91T" eventType="touchUpInside" id="Kjs-MV-Pai"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XbQ-8s-1Lp">
+                                <rect key="frame" x="187" y="522.5" width="40" height="30"/>
+                                <state key="normal" title="Share"/>
+                                <connections>
+                                    <action selector="shareDocument:" destination="bgw-3e-91T" eventType="touchUpInside" id="7nb-ai-MeZ"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
                             <constraint firstItem="1Zv-x8-BRb" firstAttribute="centerY" secondItem="Ey5-Fn-hgc" secondAttribute="centerY" id="HsI-qq-Wth"/>
                             <constraint firstItem="1Zv-x8-BRb" firstAttribute="centerX" secondItem="Ey5-Fn-hgc" secondAttribute="centerX" id="ObI-Bl-waK"/>
+                            <constraint firstItem="XbQ-8s-1Lp" firstAttribute="centerY" secondItem="Ey5-Fn-hgc" secondAttribute="centerY" multiplier="1.2" id="duE-8p-3x2"/>
+                            <constraint firstItem="XbQ-8s-1Lp" firstAttribute="centerX" secondItem="Ey5-Fn-hgc" secondAttribute="centerX" id="tic-7t-90d"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="aiH-fJ-swA"/>
                     </view>
